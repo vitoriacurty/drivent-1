@@ -43,10 +43,20 @@ function getFirstAddress(firstAddress: Address): GetAddressResult {
 
 type GetAddressResult = Omit<Address, 'createdAt' | 'updatedAt' | 'enrollmentId'>;
 
+function isCEPValid(cep: string): boolean {
+  const cepRegex = /^[0-9]{8}$/; // Formato de CEP com 8 dígitos numéricos
+
+  return cepRegex.test(cep);
+}
+
+
 async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
   const enrollment = exclude(params, 'address');
   enrollment.birthday = new Date(enrollment.birthday);
   const address = getAddressForUpsert(params.address);
+  if (!isCEPValid(address.cep)) {
+    throw new Error('CEP inválido');
+  }
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
 
