@@ -50,18 +50,28 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
+
   try {
     const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
 
     if (!response.data || response.status === httpStatus.BAD_REQUEST || response.data.erro) {
-      throw invalidDataError('CEP inválido');
+      // Retorne um erro com status code 400 Bad Request quando o CEP é inválido.
+      throw new Error('CEP inválido');
     }
 
     // Se o CEP for válido, você pode prosseguir com a criação ou atualização da matrícula.
+    const enrollmentWithAddress = await enrollmentRepository.findWithAddressByUserId(params.userId);
+
+    if (!enrollmentWithAddress || !enrollmentWithAddress.Address) {
+      // Retorne um erro com status code 400 Bad Request quando a inscrição não tiver endereço.
+      throw new Error('Inscrição sem endereço');
+    }
+  
     const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
     await addressRepository.upsert(newEnrollment.id, address, address);
   } catch (error) {
-    console.error('Erro ao verificar o CEP:', error);
+    console.error('Erro ao verificar o CEP ou atualizar a inscrição:', error);
+    throw error;
   }
 }
 
