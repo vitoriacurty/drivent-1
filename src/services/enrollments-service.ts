@@ -16,7 +16,7 @@ async function getAddressFromCEP(cep: string) {
 
   // FIXME: não estamos interessados em todos os campos
   const { logradouro, complemento, bairro, localidade, uf } = result.data;
-  return { logradouro, complemento, bairro, cidade: localidade, uf }; 
+  return { logradouro, complemento, bairro, cidade: localidade, uf };
 }
 
 async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddressByUserIdResult> {
@@ -43,26 +43,31 @@ function getFirstAddress(firstAddress: Address): GetAddressResult {
 
 type GetAddressResult = Omit<Address, 'createdAt' | 'updatedAt' | 'enrollmentId'>;
 
-function isCEPValid(cep: string): boolean {
-  const cepRegex = /^[0-9]{8}$/; // Formato de CEP com 8 dígitos numéricos
-
-  return cepRegex.test(cep);
-}
-
-
 async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
   const enrollment = exclude(params, 'address');
   enrollment.birthday = new Date(enrollment.birthday);
   const address = getAddressForUpsert(params.address);
-  if (!isCEPValid(address.cep)) {
-    throw new Error('CEP inválido');
-  }
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
+  try {
+    const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
 
-  const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
+    if (response.status === 400) {
+      throw new Error('CEP inválido');
+    }
 
-  await addressRepository.upsert(newEnrollment.id, address, address);
+    const cepData = response.data;
+
+    if (!cepData) {
+      throw new Error('CEP inválido');
+    }
+
+    // Se o CEP for válido, você pode prosseguir com a criação ou atualização da matrícula.
+    const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
+    await addressRepository.upsert(newEnrollment.id, address, address);
+  } catch (error) {
+    console.error('Erro ao verificar o CEP:', error);
+  }
 }
 
 function getAddressForUpsert(address: CreateAddressParams) {
