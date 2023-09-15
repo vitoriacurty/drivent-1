@@ -11,7 +11,7 @@ async function getAddressFromCEP(cep: string) {
   const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
   // TODO: Tratar regras de negócio e lanças eventuais erros
-  if (!result.data) {
+  if (!result.data || result.status === httpStatus.BAD_REQUEST || result.data.erro) {
     throw notFoundError();
   }
 
