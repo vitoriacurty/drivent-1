@@ -1,8 +1,9 @@
 import { Address, Enrollment } from '@prisma/client';
 import { request } from '@/utils/request';
-import { notFoundError } from '@/errors';
+import { invalidDataError, notFoundError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
+import httpStatus from 'http-status';
 
 // TODO - Receber o CEP por parâmetro nesta função.
 async function getAddressFromCEP(cep: string) {
@@ -52,14 +53,8 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   try {
     const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
 
-    if (response.status === 400) {
-      throw new Error('CEP inválido');
-    }
-
-    const cepData = response.data;
-
-    if (!cepData) {
-      throw new Error('CEP inválido');
+    if (!response.data || response.status === httpStatus.BAD_REQUEST || response.data.erro) {
+      throw invalidDataError('CEP inválido');
     }
 
     // Se o CEP for válido, você pode prosseguir com a criação ou atualização da matrícula.
