@@ -1,9 +1,9 @@
 import { Address, Enrollment } from '@prisma/client';
+import httpStatus from 'http-status';
 import { request } from '@/utils/request';
 import { invalidDataError, notFoundError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
-import httpStatus from 'http-status';
 
 // TODO - Receber o CEP por parâmetro nesta função.
 async function getAddressFromCEP(cep: string) {
