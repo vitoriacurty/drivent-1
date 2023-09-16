@@ -50,43 +50,16 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
-  try {
-    const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
 
-    if (response.status === 400) {
-      throw new Error('CEP inválido');
-    }
-
-    const cepData = response.data;
-
-    if (!cepData) {
-      throw new Error('CEP inválido');
-    }
-
-    // Se o CEP for válido, você pode prosseguir com a criação ou atualização da matrícula.
-    const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
-    await addressRepository.upsert(newEnrollment.id, address, address);
-  } catch (error) {
-    console.error('Erro ao verificar o CEP:', error);
+  const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
+  if (!response.data || response.status === httpStatus.BAD_REQUEST || response.data.erro) {
+    // Retorne um erro com status code 400 Bad Request quando o CEP é inválido.
+    throw invalidDataError('CEP inválido');
   }
+
+  const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
+  await addressRepository.upsert(newEnrollment.id, address, address);
 }
-
-// async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
-//   const enrollment = exclude(params, 'address');
-//   enrollment.birthday = new Date(enrollment.birthday);
-//   const address = getAddressForUpsert(params.address);
-
-//   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
-
-//   const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
-//   if (!response.data || response.status === httpStatus.BAD_REQUEST || response.data.erro) {
-//     // Retorne um erro com status code 400 Bad Request quando o CEP é inválido.
-//     throw invalidDataError('CEP inválido');
-//   }
-
-//   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
-//   await addressRepository.upsert(newEnrollment.id, address, address);
-// }
 
 function getAddressForUpsert(address: CreateAddressParams) {
   return {

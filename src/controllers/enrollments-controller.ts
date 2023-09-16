@@ -29,10 +29,7 @@ export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response
     res.status(httpStatus.OK).send(address);
   } catch (error) {
     if (error.message === 'No result for this search!') {
-      res.status(httpStatus.NO_CONTENT).send({ error: 'CEP inválido' });
-    } else {
-      console.error('Erro ao obter o endereço:', error);
-      res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Erro interno do servidor' });
+      return res.status(httpStatus.NO_CONTENT).send({ error: 'CEP inválido' });
     }
   }
 }
