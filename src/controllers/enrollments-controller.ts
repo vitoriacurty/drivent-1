@@ -37,22 +37,4 @@ export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response
   }
 }
 
-// export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response) {
-//   const { cep } = req.query;
-
-//   try {
-//     const address = await enrollmentsService.getAddressFromCEP(String(cep));
-//     res.status(httpStatus.OK).send(address);
-//   } catch (error) {
-//     if (error.message === 'CEP inválido') {
-//       res.status(httpStatus.NO_CONTENT).send({ error: 'CEP inválido' });
-//     } else {
-
-//       console.error('Erro ao obter o endereço:', error);
-//       res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ error: 'Erro interno do servidor' });
-//     }
-//   }
-// }
-
-
 
