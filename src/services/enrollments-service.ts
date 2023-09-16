@@ -3,7 +3,7 @@ import { request } from '@/utils/request';
 import { invalidDataError, notFoundError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
-import httpStatus from 'http-status';
+import httpStatus = require('http-status');
 
 // TODO - Receber o CEP por parâmetro nesta função.
 async function getAddressFromCEP(cep: string) {
@@ -52,7 +52,7 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
 
   const response = await request.get(`${process.env.VIA_CEP_API}/${address.cep}/json/`);
-  if (!response.data || response.status === httpStatus.BAD_REQUEST || response.data.erro) {
+  if (!response.data || response.status == httpStatus.BAD_REQUEST || response.data.erro) {
     // Retorne um erro com status code 400 Bad Request quando o CEP é inválido.
     throw invalidDataError('CEP inválido');
   }

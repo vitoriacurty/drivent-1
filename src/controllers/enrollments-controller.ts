@@ -28,8 +28,8 @@ export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response
     const address = await enrollmentsService.getAddressFromCEP(String(cep));
     res.status(httpStatus.OK).send(address);
   } catch (error) {
-    if (error.message === 'No result for this search!') {
-      return res.status(httpStatus.NO_CONTENT).send({ error: 'CEP inválido' });
+    if (error.name === 'NotFoundError') {
+      return res.sendStatus(httpStatus.NO_CONTENT);
     }
   }
 }
